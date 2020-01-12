@@ -63,11 +63,12 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and().exceptionHandling().authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(new CustomAccessDeniedHandler());
     }
-    @Override
+   /* @Override
     public void configure(WebSecurity web) throws Exception {
         web
                 .ignoring()
-                .antMatchers("/h2-console/**");
-    }
+                .antMatchers("/h2-console/**")
+              //  .antMatchers("/**"); //todo dodalem zeby dzialalo
+    }*/
 
 }
