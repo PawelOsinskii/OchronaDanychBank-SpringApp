@@ -5,7 +5,7 @@ export default class Login extends React.Component {
         super(props);
         this.state= {
             email: 'admin@admin.pl',
-            pwd: 'admin'
+            pwd: 'user'
         }
         this.handleChangeEmail = this.handleChangeEmail.bind(this);
         this.handleChangePwd = this.handleChangePwd.bind(this);
@@ -18,25 +18,23 @@ export default class Login extends React.Component {
         this.setState({pwd: event.target.value})
     }
     signIn() {
-        var myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/json");
-        myHeaders.append("Authorization", "Basic Z2xlZS1vLW1ldGVyOnNlY3JldA==");
-
-        var formdata = new FormData();
-        formdata.append("username", this.state.email);
-        formdata.append("password", this.state.pwd);
-        formdata.append("grant_type", "password");
-
-        var requestOptions = {
+        fetch("http://localhost:8080/api/auth/login", {
             method: 'POST',
-            headers: myHeaders,
-            body: JSON.stringify({"username": this.state.email,
-            "password": this.state.pwd, "grant_type": "password"}),
-           // redirect: 'follow'
-        };
-        console.log(requestOptions)
-        fetch("http://localhost:8080/oauth/token", requestOptions)
-            .then(response => console.log(response))
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                email: this.state.email,
+                password: this.state.pwd,
+            }),
+        })
+            .then(response => response.json())
+            .then(currentUser => {
+
+                this.props.setCurrentUser(currentUser);
+                this.props.history.push('/account');
+
+            })
             .catch(error => console.log('error', error));
     }
 

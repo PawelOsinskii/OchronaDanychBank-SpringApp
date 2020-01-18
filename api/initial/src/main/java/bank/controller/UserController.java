@@ -1,111 +1,60 @@
 package bank.controller;
 
-import bank.database.User;
-import lombok.extern.slf4j.Slf4j;
-import bank.database.UserRepository;
-import bank.security.EntityNotFoundException;
-import bank.security.UserService;
+import bank.models.User;
+import bank.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.constraints.Size;
-import java.util.HashSet;
-
+import static org.springframework.http.ResponseEntity.ok;
 
 @RestController
-@RequestMapping("/api/users")
-@Slf4j
-@Validated
+@RequestMapping("/api/user")
 public class UserController {
     @Autowired
-    UserService userService;
+    UserRepository users;
 
+    @GetMapping("/balance")
+    private ResponseEntity getBalance(HttpServletRequest request){
+        Principal principal = request.getUserPrincipal();
+        User currentUser = users.findByEmail(principal.getName());
 
-    private final UserRepository repository;
-
-    private final PasswordEncoder passwordEncoder;
-
-    UserController(UserRepository repository, PasswordEncoder passwordEncoder) {
-        this.repository = repository;
-        this.passwordEncoder = passwordEncoder;
+        return ok(currentUser.getBalance());
     }
-
-    @GetMapping
-    Page<User> all(@PageableDefault(size = Integer.MAX_VALUE) Pageable pageable, OAuth2Authentication authentication) {
-        String auth = (String) authentication.getUserAuthentication().getPrincipal();
-        String role = authentication.getAuthorities().iterator().next().getAuthority();
-        if (role.equals(User.Role.USER.name())) {
-            return repository.findAllByEmail(auth, pageable);
+    @PostMapping("/send")
+    private ResponseEntity sendMoney(HttpServletRequest request, @RequestBody SendBody sendData){
+        Principal principal = request.getUserPrincipal();
+        User currentUser = users.findByEmail(principal.getName());
+        if(sendData.getMoney() <= 0)
+            return ok("You have to write amount");
+        if(users.findByEmail(sendData.getEmail())==null)
+            return ok("bad user");
+        User reciver = users.findByEmail(sendData.getEmail());
+        if(reciver.getEmail().equals(currentUser.getEmail())){
+            return ok("you cant send for yourself");
         }
-        return repository.findAll(pageable);
-    }
+        if((reciver.getBalance()+sendData.getMoney())>=Long.MAX_VALUE)
+            return ok("user has too much money!");
+        if(sendData.getMoney()>10000000)
+            return ok("you can not send more than 10000000");
+        if(currentUser.getBalance() >= sendData.getMoney()) {
+            currentUser.setBalance(currentUser.getBalance()-sendData.getMoney());
+            reciver.setBalance(reciver.getBalance()+sendData.getMoney());
+            users.save(currentUser);
+            users.save(reciver);
+            return ok("Transfer was send");
 
-    @GetMapping("/search")
-    Page<User> search(@RequestParam String email, Pageable pageable, OAuth2Authentication authentication) {
-        String auth = (String) authentication.getUserAuthentication().getPrincipal();
-        String role = authentication.getAuthorities().iterator().next().getAuthority();
-        if (role.equals(User.Role.USER.name())) {
-            return repository.findAllByEmailContainsAndEmail(email, auth, pageable);
         }
-        return repository.findByEmailContains(email, pageable);
-    }
 
-    @GetMapping("/findByEmail")
-    @PreAuthorize("!hasAuthority('USER') || (authentication.principal == #email)")
-    User findByEmail(@RequestParam String email, OAuth2Authentication authentication) {
-        return repository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException(User.class, "email", email));
-    }
-
-    @GetMapping("/{id}")
-    @PostAuthorize("!hasAuthority('USER') || (returnObject != null && returnObject.email == authentication.principal)")
-    User one(@PathVariable Long id) {
-        return repository.findById(id).orElseThrow(() -> new EntityNotFoundException(User.class, "id", id.toString()));
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("!hasAuthority('USER') || (authentication.principal == @userRepository.findById(#id).orElse(new net.reliqs.gleeometer.users.User()).email)")
-    void update(@PathVariable Long id, @Valid @RequestBody User res) {
-        User u = repository.findById(id).orElseThrow(() -> new EntityNotFoundException(User.class, "id", id.toString()));
-        res.setPassword(u.getPassword());
-
-        repository.save(res);
-    }
-
-    @PostMapping
-    @PreAuthorize("!hasAuthority('USER')")
-    User create(@Valid @RequestBody User res) {
-        return repository.save(res);
-    }
-
-
-
-    @PutMapping("/{id}/changePassword")
-    @PreAuthorize("!hasAuthority('USER') || (#oldPassword != null && !#oldPassword.isEmpty() && authentication.principal == @userRepository.findById(#id).orElse(new net.reliqs.gleeometer.users.User()).email)")
-    void changePassword(@PathVariable Long id, @RequestParam(required = false) String oldPassword, @Valid @Size(min = 3) @RequestParam String newPassword) {
-        User user = repository.findById(id).orElseThrow(() -> new EntityNotFoundException(User.class, "id", id.toString()));
-        if (oldPassword == null || oldPassword.isEmpty() || passwordEncoder.matches(oldPassword, user.getPassword())) {
-            user.setPassword(passwordEncoder.encode(newPassword));
-            repository.save(user);
-        } else {
-            throw new ConstraintViolationException("old password doesn't match", new HashSet<>());
+        if(currentUser.getBalance() < sendData.getMoney()){
+            return ok("You dony have enough money");
         }
+
+
+        return ok(currentUser.getBalance());
     }
+
 }
-
-
-
-
