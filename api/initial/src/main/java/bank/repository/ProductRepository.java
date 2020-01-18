@@ -1,6 +1,5 @@
 package bank.repository;
 
-import bank.models.Product;
 import org.springframework.data.repository.CrudRepository;
 
 

@@ -39,15 +39,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.httpBasic().disable().csrf().disable().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().authorizeRequests()
                 .antMatchers("/api/auth/login").permitAll().antMatchers("/api/auth/register").permitAll()
-                .antMatchers("/api/products/**").hasAuthority("ADMIN").anyRequest().authenticated().and().csrf()
+                .anyRequest().authenticated().and().csrf()
                 .disable().exceptionHandling().authenticationEntryPoint(unauthorizedEntryPoint()).and()
                 .apply(new JwtConfigurer(jwtTokenProvider));
     }
 
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**");
-    }
 
     @Bean
     public PasswordEncoder bCryptPasswordEncoder() {
