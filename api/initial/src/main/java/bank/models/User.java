@@ -21,6 +21,15 @@ public class User {
     private String fullname;
     private boolean enabled;
     private Long balance;
+    private int attempts;
+
+    public int getAttempts() {
+        return attempts;
+    }
+
+    public void setAttempts(int attempts) {
+        this.attempts = attempts;
+    }
 
     @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL})
     private Set<Role> roles;

@@ -31,8 +31,13 @@ export default class Login extends React.Component {
             .then(response => response.json())
             .then(currentUser => {
 
-                this.props.setCurrentUser(currentUser);
-                this.props.history.push('/account');
+                if(currentUser.error){
+                    alert("bad login");
+                }
+                else {
+                    this.props.setCurrentUser(currentUser);
+                    this.props.history.push('/account');
+                }
 
             })
             .catch(error => console.log('error', error));
