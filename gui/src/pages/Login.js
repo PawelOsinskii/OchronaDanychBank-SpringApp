@@ -18,7 +18,7 @@ export default class Login extends React.Component {
         this.setState({pwd: event.target.value})
     }
     signIn() {
-        fetch("http://localhost:8080/api/auth/login", {
+        fetch("https://localhost:8080/api/auth/login", {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",

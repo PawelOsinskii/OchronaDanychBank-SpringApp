@@ -54,7 +54,7 @@ public class AuthController {
             model.put("username", username);
             model.put("token", token);
             user.setAttempts(0);
-            users.save(user);
+            users.save(user);//todo walidacje aby to był poprawny adres e-mail na backendzie, hashowanie hasla, tytul przelewu, historia przelewow , https , zmiana hasla
             return ok(model);
         } catch (AuthenticationException e) {
 

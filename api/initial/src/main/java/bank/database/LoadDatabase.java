@@ -60,7 +60,7 @@ public class LoadDatabase {
             user.setBalance(Long.valueOf(1000000000));
             final User save = userRepository.save(user);
             user2.setEnabled(true);
-            user2.setPassword(passwordEncoder.encode("user"));
+            user2.setPassword(passwordEncoder.encode("user")); //spring automatycznie dodaje sól w WebSecurityConfig bCryptPasswordEncoder
             user2.setRoles(roles);
             user2.setEmail("admin2@admin.pl");
             user2.setFullname("lolo");

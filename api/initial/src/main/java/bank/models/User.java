@@ -3,6 +3,8 @@ package bank.models;
 import lombok.Data;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -14,7 +16,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private String email;
+    @Email
+    private String email; //moze byc tylko email hibernate annotacja
 
 
     private String password;
@@ -33,6 +36,15 @@ public class User {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.ALL})
     private Set<Role> roles;
+
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "sender",fetch = FetchType.EAGER, orphanRemoval = true, cascade = {CascadeType.ALL})
+    private List<Transaction> sentTransactions;
+
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "receiver", fetch = FetchType.EAGER, orphanRemoval = true, cascade = {CascadeType.ALL})
+    private List<Transaction> receivedTransactions;
+
+
+
 
     public Long getId() {
         return id;
@@ -91,4 +103,20 @@ public class User {
     }
 
 
+
+    public List<Transaction> getSentTransactions() {
+        return sentTransactions;
+    }
+
+    public void setSentTransactions(List<Transaction> sentTransactions) {
+        this.sentTransactions = sentTransactions;
+    }
+
+    public List<Transaction> getReceivedTransactions() {
+        return receivedTransactions;
+    }
+
+    public void setReceivedTransactions(List<Transaction> receivedTransactions) {
+        this.receivedTransactions = receivedTransactions;
+    }
 }

@@ -3,6 +3,15 @@ package bank.controller;
 public class SendBody {
     private String email;
     private Long money;
+    private String title;
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
     public Long getMoney() {
         return money;
